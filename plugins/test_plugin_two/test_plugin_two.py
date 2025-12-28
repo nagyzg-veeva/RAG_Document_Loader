@@ -4,5 +4,6 @@ class TestPluginTwo(DocumentLoaderPluginInterface):
     def __init__(self):
         print("TestPluginTwo initialized")
 
-    def run(self):
+    def run(self) -> str:
         print("TestPluginTwo running")
+        return "TestPluginTwo"  

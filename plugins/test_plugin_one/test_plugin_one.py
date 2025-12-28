@@ -4,5 +4,13 @@ class TestPluginOne(DocumentLoaderPluginInterface):
     def __init__(self):
         print("TestPluginOne initialized")
 
-    def run(self):
-        print("TestPluginOne running")
+    
+
+    def load_document(self):
+        return super().load_document()
+    
+    def transform_document(self):
+        return super().transform_document()
+    
+    def download_document(self, document_config):
+        return super().download_document(document_config)
