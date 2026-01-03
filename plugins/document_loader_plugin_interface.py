@@ -1,9 +1,20 @@
+import logging
+import psycopg2
+import logging
 from abc import ABC, abstractmethod
+from typing import Dict, Any
+from pathlib import Path
+
+from file_version_tracker import FileVersionTracker
+
+# Import the global config to access PLUGIN_CONFIG_PATH
+
 
 class DocumentLoaderPluginInterface(ABC):
 
-    def __init__(self, document_config:dict):
-        pass
+    def __init__(self, plugin_config:Dict[str, Any], file_version_tracker:FileVersionTracker, log_level:str=logging.ERROR):
+        self.config = plugin_config or {}
+        self.file_version_tracker = file_version_tracker
 
     def download_vault_file(self, vault_file_config:str) -> str:
         """
@@ -55,9 +66,10 @@ class DocumentLoaderPluginInterface(ABC):
         """
         pass
 
+        
 
     @abstractmethod
-    def download_document(self, document_config:dict) -> str:
+    def download_document(self) -> str:
         pass
 
 

@@ -1,29 +1,27 @@
-import importlib
-import yaml
-import pprint
-
-
-def load_config() -> dict:
-    with open('plugin_config.yml', 'r') as plugin_config:
-        config = yaml.safe_load(plugin_config)
-        pprint.pp(config)
-
-
-
+from plugin_loader import PluginLoader
+from plugins.document_loader_plugin_interface import DocumentLoaderPluginInterface
+from file_version_tracker import FileVersionTracker
+import config.config as config
 
 def main():
+    file_version_tracker = FileVersionTracker(config=config)
+    plugin_loader = PluginLoader(plugin_config=config.PLUGIN_CONFIG_PATH, file_version_tracker=file_version_tracker)
+    plugins = plugin_loader.load_plugins()
 
-    config = load_config()
+    for plugin_name in plugins:
+        try:
+            plugin_context = plugins[plugin_name]
+            plugin_instance:DocumentLoaderPluginInterface = plugin_context['plugin_instance']
+            plugin_config = plugin_context['config']
 
-    for plugin_config in config['plugins']:
+            download_document_result = plugin_instance.download_document()
+            transform_document_result = plugin_instance.transform_document()
+            load_document_result = plugin_instance.load_document()
 
-        path = plugin_config['path']
-        classname = plugin_config['name']
+        except Exception as e:
+            print(f"Error: {e}")
 
-        
-
-
-
-
+    
 if __name__ == "__main__":
+    
     main()

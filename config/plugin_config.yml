@@ -1,0 +1,24 @@
+plugins: 
+    - path: "plugins.test_plugin_one"
+      name: "TestPluginOne"
+      classname: "TestPluginOne"
+      enabled: true
+      config: 
+        config_var: "test"
+
+
+    - path: "plugins.test_plugin_two"
+      name: "TestPluginTwo"
+      classname: "TestPluginTwo"
+      enabled: true
+      config:
+        config_var: "test"
+
+
+documents:
+  - document_one:
+    plugin: "test_plugin_one"
+    uri: "uri"
+    auth_params: "auth_params"
+    
+
