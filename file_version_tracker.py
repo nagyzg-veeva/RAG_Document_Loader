@@ -33,12 +33,16 @@ class FileVersionTracker:
             raise RuntimeError(f"Database error in set_last_version: {e}")
         
 
-    def is_new_version_available(self, filename: str, new_version_timestamp: datetime.datetime) -> bool:
-        if not isinstance(new_version_timestamp, datetime.datetime):
-            raise TypeError("new_version_timestamp must be a datetime object")
+    def is_new_version_available(self, filename: str, new_version_timestamp_str: str) -> bool:
+        
+        try:
+            new_version_timestamp = datetime.datetime.fromisoformat(new_version_timestamp_str.replace('Z', '+00:00'))
+            last_version = self.get_last_version(filename)
 
-        last_version = self.get_last_version(filename)
-        if last_version is None:
-            return True
-        return new_version_timestamp > last_version
+            if last_version is None:
+                return True
+            
+            return new_version_timestamp > last_version
+        except Exception as e:
+            raise RuntimeError(f"The given timestamp string is not valid: {e}")
     

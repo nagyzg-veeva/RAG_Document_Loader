@@ -17,8 +17,6 @@ class PluginConfig:
     path: str
     classname: str
     enabled: bool
-    config: Dict[str, Any]
-
 
 class PluginLoader:
 
@@ -46,7 +44,6 @@ class PluginLoader:
                     path=plugin.get('path', ''),
                     classname=plugin.get('classname',''),
                     enabled=plugin.get('enabled', True),
-                    config=plugin.get('config', {})    
                 )
                 for plugin in config_data.get('plugins', [])
             ]
@@ -70,8 +67,10 @@ class PluginLoader:
             if not hasattr(module, config.classname):
                 raise AttributeError(f"Class {config.classname} not found in module {config.path}")
 
+            plugin_logger = logging.getLogger(config.classname)
+            
             plugin_cls = getattr(module, config.classname)
-            instance = plugin_cls(config.config, self.file_version_tracker)
+            instance = plugin_cls().set_file_version_tracker(self.file_version_tracker).set_logger(plugin_logger)
 
             return instance
 

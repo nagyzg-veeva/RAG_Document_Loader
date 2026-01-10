@@ -1,5 +1,5 @@
 from plugin_loader import PluginLoader
-from plugins.document_loader_plugin_interface import DocumentLoaderPluginInterface
+from plugins.document_loader_plugin import DocumentLoaderPlugin
 from file_version_tracker import FileVersionTracker
 import config.config as config
 
@@ -11,12 +11,10 @@ def main():
     for plugin_name in plugins:
         try:
             plugin_context = plugins[plugin_name]
-            plugin_instance:DocumentLoaderPluginInterface = plugin_context['plugin_instance']
+            plugin_instance:DocumentLoaderPlugin = plugin_context['plugin_instance']
             plugin_config = plugin_context['config']
-
-            download_document_result = plugin_instance.download_document()
-            transform_document_result = plugin_instance.transform_document()
-            load_document_result = plugin_instance.load_document()
+            
+            result = plugin_instance.run()
 
         except Exception as e:
             print(f"Error: {e}")

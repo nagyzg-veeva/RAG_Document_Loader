@@ -1,20 +1,40 @@
 import logging
 import psycopg2
-import logging
+import tempfile
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from dataclasses import dataclass
+from typing import Dict, Any, Optional
 from pathlib import Path
+import tempfile
+import os
 
 from file_version_tracker import FileVersionTracker
 
 # Import the global config to access PLUGIN_CONFIG_PATH
 
 
-class DocumentLoaderPluginInterface(ABC):
+class PluginResult:
+    """Standardized return type for document loader plugins"""
+    success: bool
+    content: Optional[str] = None
+    file_path: Optional[Path] = None
+    metadata: Optional[dict] = None
+    error_message: Optional[str] = None
+    requires_version_update: bool = True
 
-    def __init__(self, plugin_config:Dict[str, Any], file_version_tracker:FileVersionTracker, log_level:str=logging.ERROR):
-        self.config = plugin_config or {}
+
+class DocumentLoaderPlugin(ABC):
+
+    def __init__(self):
+        self.plugin_dir = Path(__file__).resolve().parent
+
+    def set_file_version_tracker(self, file_version_tracker:FileVersionTracker) -> 'DocumentLoaderPlugin':
         self.file_version_tracker = file_version_tracker
+        return self
+
+    def set_logger(self, logger:logging) -> 'DocumentLoaderPlugin':
+        self.logger = logger
+        return self
 
     def download_vault_file(self, vault_file_config:str) -> str:
         """
@@ -66,21 +86,33 @@ class DocumentLoaderPluginInterface(ABC):
         """
         pass
 
+    def create_tmp_file_from_content(self, content:str, extension:str) -> str:
+        """
+        Creates a temporary file with the given content and extension.
         
+        :param content: The content to write to the file
+        :type content: str
+        :param extension: File extension (e.g., '.txt', '.pdf'). If not starting with dot, one will be added.
+        :type extension: str
+        :return: Path to the created temporary file
+        :rtype: str
+        """
 
+        # Ensure extension starts with a dot
+        if not extension.startswith('.'):
+            extension = '.' + extension
+        
+        # Create a temporary file with the given extension
+        with tempfile.NamedTemporaryFile(mode='w', suffix=extension, delete=False, encoding='utf-8') as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
+        
+        return tmp_path
+
+        
     @abstractmethod
-    def download_document(self) -> str:
+    def run(self) -> PluginResult:
         pass
-
-
-    @abstractmethod
-    def transform_document(self) -> str:
-        pass
-
-
-    def load_document(self) -> str:
-        pass
-
 
 
 
