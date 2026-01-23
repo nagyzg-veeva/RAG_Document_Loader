@@ -13,7 +13,8 @@ WORKSHEET_ID="1406128683"
 TRACKED_FILENAME = 'VCRM Migration - Tracker'
 OUTPUT_FILEPATH = 'VCRM Migration - Tracker.md'
 PLUGIN_PATH = Path(__file__).parent
-CREDNTIALS = str((PLUGIN_PATH / "oca-agentic-rag-mig-helper-21954a69ee21.json").resolve())
+CREDNTIALS = str((PLUGIN_PATH / "oca-agentic-rag-mig-helper-bd0382bcb4b0.json").resolve())
+
 if Path(CREDNTIALS).exists():
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=CREDNTIALS
 
@@ -159,31 +160,38 @@ class MigrationTracker(DocumentLoaderPlugin):
     
 
 
-    def run(self) -> PluginResult:
+    def run(self) -> 'PluginResult':
+        from plugins.document_loader_plugin import PluginResult  # Import here to avoid circular import
+
         self.logger.info(f"{__name__} plugin's run() method called")
 
         try:
             self.get_gsheet_client()
-            self.get_sheet()          
+            self.get_sheet()
+            sheet_last_update_time = self.sheet.get_lastUpdateTime()
+            self.logger.info(f"sheet last update date: {sheet_last_update_time}")
+
+            if self.should_process(TRACKED_FILENAME, sheet_last_update_time):
+                self.logger.info("New version available, processing...")
+                worksheet = self.sheet.get_worksheet_by_id(WORKSHEET_ID)
+                worksheet_data = worksheet.get_all_values()
+                self.data = pd.DataFrame(worksheet_data)
+                content = self.convert_content()
+
+                if content:
+                    tmp_file_path = super().create_tmp_file_from_content(content=content, extension=".md")
+                    self.logger.info(f"Temp File Path: {tmp_file_path}")
+                    # Update version tracker
+                    #self.update_version_tracker(TRACKED_FILENAME, sheet_last_update_time)
+                    return self.create_result(success=True, file_path=Path(tmp_file_path), display_name=OUTPUT_FILEPATH, metadata={"source": "gsheet", "last_update": sheet_last_update_time})
+                else:
+                    return self.create_result(success=False, error_message="No content generated")
+            else:
+                self.logger.info("No new version, skipping")
+                return self.create_result(success=True, requires_version_update=False, metadata={"skipped": True})
 
         except Exception as e:
-            self.logger.error(f"Error {type(e).__name__}: {e} ")
-            raise
-        
-        sheet_last_update_time = self.sheet.get_lastUpdateTime()
-        self.logger.info(f"sheet last update date: {sheet_last_update_time}")
-        
-        new_version_available = self.file_version_tracker.is_new_version_available(TRACKED_FILENAME, sheet_last_update_time)
-        self.logger.info(f"New version available: {new_version_available}")
-
-        if new_version_available:
-            worksheet = self.sheet.get_worksheet_by_id(WORKSHEET_ID)
-            worksheet_data = worksheet.get_all_values()
-            self.data = pd.DataFrame(worksheet_data)
-            content = self.convert_content()
-
-            if content:
-                tmp_file_path = super().create_tmp_file_from_content(content=content, extension="txt")
-                self.logger.info(f"Temp File Path: {tmp_file_path}")
+            self.logger.error(f"Error {type(e).__name__}: {e}")
+            return self.create_result(success=False, error_message=str(e))
 
             

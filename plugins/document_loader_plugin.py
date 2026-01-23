@@ -13,9 +13,11 @@ from file_version_tracker import FileVersionTracker
 # Import the global config to access PLUGIN_CONFIG_PATH
 
 
+@dataclass
 class PluginResult:
     """Standardized return type for document loader plugins"""
     success: bool
+    display_name: str
     content: Optional[str] = None
     file_path: Optional[Path] = None
     metadata: Optional[dict] = None
@@ -109,7 +111,19 @@ class DocumentLoaderPlugin(ABC):
         
         return tmp_path
 
-        
+    def create_result(self, success: bool, **kwargs) -> PluginResult:
+        """Factory method for creating PluginResult instances"""
+        return PluginResult(success=success, **kwargs)
+
+    def update_version_tracker(self, filename: str, version: str):
+        """Wrapper to update file version tracker"""
+        self.file_version_tracker.set_last_version(filename, version)
+
+    def should_process(self, filename: str, current_version: str) -> bool:
+        """Check if new version is available"""
+        return self.file_version_tracker.is_new_version_available(filename, current_version)
+
+
     @abstractmethod
     def run(self) -> PluginResult:
         pass

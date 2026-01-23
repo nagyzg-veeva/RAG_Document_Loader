@@ -16,3 +16,9 @@ DB_USER = os.getenv("DB_USER", "")
 DB_PASS = os.getenv("DB_PASS", "")
 DB_NAME = os.getenv("DB_NAME", "")
 DB_TABLE_NAME = "file_tracker"
+
+
+#Corpus settitngs
+PROJECT_ID = "oca-agentic-rag-mig-helper"
+LOCATION = "europe-west3"
+CORPUS_NAME = "projects/oca-agentic-rag-mig-helper/locations/europe-west3/ragCorpora/3379951520341557248"

@@ -24,7 +24,7 @@ class FileVersionTracker:
             raise RuntimeError(f"Database error in get_last_version: {e}")
 
 
-    def set_last_version(self, filename: str) -> None:
+    def set_last_version(self, filename: str, version: str) -> None:
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(f"UPDATE {self.table_name} SET tracker = NOW() WHERE filename = %s", (filename,))

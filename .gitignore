@@ -14,3 +14,8 @@ wheels/
 
 #env
 .env
+
+
+#gcloud credentials
+plugins/migration_tracker/oca-agentic-rag-mig-helper-bd0382bcb4b0.json
+
