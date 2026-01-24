@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 from plugins.document_loader_plugin import DocumentLoaderPlugin
-from file_version_tracker import FileVersionTracker
+from file_version_tracker import FileVersionTracker 
 
 SHEET_ID = "1NJLdhSol4tqnIdeMg9uGSjC98h3V_sFGcAkAbJUBpp4"
 WORKSHEET_ID = "1406128683"
@@ -15,11 +15,10 @@ TRACKED_FILENAME = "VCRM Migration - Tracker"
 OUTPUT_FILEPATH = "VCRM Migration - Tracker.md"
 PLUGIN_PATH = Path(__file__).parent
 CREDNTIALS = str(
-    (PLUGIN_PATH / "oca-agentic-rag-mig-helper-bd0382bcb4b0.json").resolve()
+    (PLUGIN_PATH / "oca-agentic-rag-mig-helper-b39f9eb088cc.json").resolve()
 )
 
-if Path(CREDNTIALS).exists():
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDNTIALS
+
 
 HEADER_MAP = header_map = {
     0: "Item ID",
@@ -205,6 +204,9 @@ class MigrationTracker(DocumentLoaderPlugin):
 
         self.logger.info(f"{__name__} plugin's run() method called")
 
+        if Path(CREDNTIALS).exists():
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDNTIALS
+
         try:
             self.get_gsheet_client()
             self.get_sheet()
@@ -258,3 +260,6 @@ class MigrationTracker(DocumentLoaderPlugin):
             return self.create_result(
                 success=False, display_name=OUTPUT_FILEPATH, error_message=str(e)
             )
+        finally:
+            if "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
+                del os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
