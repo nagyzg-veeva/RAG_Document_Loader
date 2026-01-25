@@ -1,27 +1,36 @@
 import psycopg2
 import datetime
+from contextlib import contextmanager
 
 
 class FileVersionTracker:
 
     def __init__(self, config:dict):
-        self.connection = psycopg2.connect(
-            host=config.DB_HOST,
-            user=config.DB_USER,
-            password=config.DB_PASS,
-            database=config.DB_NAME
+        self.config = config
+
+
+    @contextmanager
+    def get_connection(self):
+        conn = psycopg2.connect(
+            host=self.config.DB_HOST,
+            user=self.config.DB_USER,
+            password=self.config.DB_PASS,
+            database=self.config.DB_NAME
         )
-        self.table_name = config.DB_TABLE_NAME
+        try:
+            yield conn
+        finally:
+            conn.close()
+
 
 
     def get_last_version(self, filename: str) -> datetime.datetime | None:
-        try:
-            with self.connection.cursor() as cursor:
-                cursor.execute(f"SELECT tracker FROM {self.table_name} WHERE filename = %s", (filename,))
+        
+        with self.get_connection() as conn:
+            with conn.cursor as cursor:
+                cursor.execute(f"SELECT tracker FROM {self.table} WHERE filename = %s", (filename,))
                 result = cursor.fetchone()
                 return datetime.datetime.fromisoformat(result[0].replace('Z', '+00:00')) if result else None
-        except psycopg2.Error as e:
-            raise RuntimeError(f"Database error in get_last_version: {e}")
 
 
     def set_last_version(self, filename: str, version: str) -> None:
