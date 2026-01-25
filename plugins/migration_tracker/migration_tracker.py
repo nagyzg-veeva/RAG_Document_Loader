@@ -198,9 +198,7 @@ class MigrationTracker(DocumentLoaderPlugin):
         return "\n" + ("\n" + "---" + "\n").join(formatted_docs)
 
     def run(self) -> "PluginResult":
-        from plugins.document_loader_plugin import (
-            PluginResult,
-        )  # Import here to avoid circular import
+        from plugins.document_loader_plugin import (PluginResult)  # Import here to avoid circular import
 
         self.logger.info(f"{__name__} plugin's run() method called")
 
@@ -235,7 +233,7 @@ class MigrationTracker(DocumentLoaderPlugin):
                     # self.update_version_tracker(TRACKED_FILENAME, sheet_last_update_time)
                     return self.create_result(
                         success=True,
-                        file_path=Path(tmp_file_path),
+                        file_path=tmp_file_path,
                         display_name=OUTPUT_FILEPATH,
                         metadata={
                             "source": "gsheet",

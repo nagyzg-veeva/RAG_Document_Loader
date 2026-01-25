@@ -19,7 +19,7 @@ class PluginResult:
     success: bool
     display_name: str
     content: Optional[str] = None
-    file_path: Optional[Path] = None
+    file_path: Optional[str] = None
     metadata: Optional[dict] = None
     error_message: Optional[str] = None
     requires_version_update: bool = True
