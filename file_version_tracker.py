@@ -34,12 +34,10 @@ class FileVersionTracker:
 
 
     def set_last_version(self, filename: str, version: str) -> None:
-        try:
-            with self.connection.cursor() as cursor:
+        with self.get_connection() as conn:
+            with self.conn.cursor() as cursor:
                 cursor.execute(f"UPDATE {self.table_name} SET tracker = NOW() WHERE filename = %s", (filename,))
-                self.connection.commit()
-        except psycopg2.Error as e:
-            raise RuntimeError(f"Database error in set_last_version: {e}")
+                self.conn.commit()
         
 
     def is_new_version_available(self, filename: str, new_version_timestamp_str: str) -> bool:
