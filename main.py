@@ -28,17 +28,28 @@ def main():
             if result.success == False:
                 continue
             
-            if result.file_path:
+            if result.file_paths:
 
-                file_name = result.display_name
-                file_path = result.file_path
+                file_names = result.display_names
+                file_paths = result.file_paths
+                last_updates = result.metadata.get('last_updates', [])
 
-                corpus_result = upload_file(file_name, file_path)
-                logger.info(f'The file {file_name} has been uploaded to the corpus. id: {corpus_result}')
-                
-                # deleting the temp file
-                path = Path(file_path)
-                path.unlink(missing_ok=True)
+                if isinstance(file_names, str):
+                    file_names = [file_names]
+                if isinstance(file_paths, str):
+                    file_paths = [file_paths]
+
+                corpus_results = upload_file(file_names, file_paths)
+                logger.info(f'The files {file_names} have been uploaded to the corpus. ids: {corpus_results}')
+
+                for i, file_name in enumerate(file_names):
+                    if i < len(last_updates):
+                        file_version_tracker.set_last_version(file_name, last_updates[i])
+                    
+                    # deleting the temp file
+                    if i < len(file_paths):
+                        path = Path(file_paths[i])
+                        path.unlink(missing_ok=True)
 
 
         except Exception as e:

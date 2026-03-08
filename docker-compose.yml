@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  rag-document-loader:
+    build: .
+    container_name: rag-document-loader
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - DB_TABLE_NAME=${DB_TABLE_NAME}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GCP_LOCATION=${GCP_LOCATION}
+      - GCP_CORPUS_NAME=${GCP_CORPUS_NAME}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/credentials.json
+    volumes:
+      - ./credentials:/app/credentials:ro
+      - ./config:/app/config:ro
+      - ./plugins:/app/plugins:ro
+    # Uncomment to run as a cron job (e.g., every hour)
+    # command: >
+    #   sh -c "while true; do
+    #     python main.py
+    #     sleep 3600
+    #   done"
+    restart: unless-stopped
+
+  # Optional: PostgreSQL database for version tracking
+  postgres:
+    image: postgres:16-alpine
+    container_name: rag-postgres
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

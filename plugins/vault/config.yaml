@@ -1,0 +1,12 @@
+---
+Documents:
+  vault_hostname: veeva-customer-services.veevavault.com
+
+  vault_name: VV-90428 
+  display_name: Migrator Implementation Playbook
+
+  vault_name: VV-90049
+  display_name: Vault CRM Migration Project Onboarding Kit
+
+  vault_name: VV-89693 
+  display_name: Vault CRM Migrations Checklists

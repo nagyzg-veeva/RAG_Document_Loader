@@ -11,7 +11,7 @@ from file_version_tracker import FileVersionTracker
 
 SHEET_ID = "1NJLdhSol4tqnIdeMg9uGSjC98h3V_sFGcAkAbJUBpp4"
 WORKSHEET_ID = "1406128683"
-TRACKED_FILENAME = "VCRM Migration - Tracker"
+TRACKED_FILENAME = "VCRM Migration - Tracker.md"
 OUTPUT_FILEPATH = "VCRM Migration - Tracker.md"
 PLUGIN_PATH = Path(__file__).parent
 CREDNTIALS = str(
@@ -230,25 +230,29 @@ class MigrationTracker(DocumentLoaderPlugin):
                     )
                     self.logger.info(f"Temp File Path: {tmp_file_path}")
                     # Update version tracker
-                    # self.update_version_tracker(TRACKED_FILENAME, sheet_last_update_time)
+                    #self.update_version_tracker(TRACKED_FILENAME, sheet_last_update_time)
                     return self.create_result(
                         success=True,
-                        file_path=tmp_file_path,
-                        display_name=OUTPUT_FILEPATH,
+                        file_paths=[tmp_file_path],
+                        display_names=[OUTPUT_FILEPATH],
                         metadata={
                             "source": "gsheet",
-                            "last_update": sheet_last_update_time,
+                            "last_updates": [sheet_last_update_time],
                         },
                     )
                 else:
                     return self.create_result(
-                        success=False, error_message="No content generated"
+                        success=False,
+                        display_names=[OUTPUT_FILEPATH],
+                        file_paths=[],
+                        error_message="No content generated"
                     )
             else:
                 self.logger.info("No new version, skipping")
                 return self.create_result(
                     success=True,
-                    display_name=OUTPUT_FILEPATH,
+                    display_names=[OUTPUT_FILEPATH],
+                    file_paths=[],
                     requires_version_update=False,
                     metadata={"skipped": True},
                 )
@@ -256,7 +260,10 @@ class MigrationTracker(DocumentLoaderPlugin):
         except Exception as e:
             self.logger.error(f"Error {type(e).__name__}: {e}")
             return self.create_result(
-                success=False, display_name=OUTPUT_FILEPATH, error_message=str(e)
+                success=False,
+                display_names=[OUTPUT_FILEPATH],
+                file_paths=[],
+                error_message=str(e)
             )
         finally:
             if "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:

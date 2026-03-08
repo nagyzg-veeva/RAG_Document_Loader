@@ -1,12 +1,10 @@
-import logging
-import psycopg2
-import tempfile
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
 import tempfile
 import os
+import logging
 
 from file_version_tracker import FileVersionTracker
 
@@ -17,9 +15,9 @@ from file_version_tracker import FileVersionTracker
 class PluginResult:
     """Standardized return type for document loader plugins"""
     success: bool
-    display_name: str
-    content: Optional[str] = None
-    file_path: Optional[str] = None
+    display_names: List[str] = None
+    content: Optional[List[str]] = None
+    file_paths: List[str] = None
     metadata: Optional[dict] = None
     error_message: Optional[str] = None
     requires_version_update: bool = True
@@ -111,9 +109,13 @@ class DocumentLoaderPlugin(ABC):
         
         return tmp_path
 
-    def create_result(self, success: bool, **kwargs) -> PluginResult:
+    def create_result(self, success: bool, display_names: List[str] = None, file_paths: List[str] = None, **kwargs) -> PluginResult:
         """Factory method for creating PluginResult instances"""
-        return PluginResult(success=success, **kwargs)
+        if display_names is None:
+            display_names = []
+        if file_paths is None:
+            file_paths = []
+        return PluginResult(success=success, display_names=display_names, file_paths=file_paths, **kwargs)
 
     def update_version_tracker(self, filename: str, version: str):
         """Wrapper to update file version tracker"""

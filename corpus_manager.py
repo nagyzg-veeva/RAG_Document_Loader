@@ -3,6 +3,7 @@ import vertexai
 from config.config import PROJECT_ID, CORPUS_NAME, LOCATION
 import logging
 import socket  # For ConnectionError
+from typing import Union, List
 
 # Retry logic for transient failures
 try:
@@ -48,18 +49,23 @@ logger = logging.getLogger(__name__)
     retry=retry_if_exception_type((GoogleAPIError, ConnectionError)),
     reraise=True,
 )
-def upload_file(file_name: str, local_path: str) -> str:
+def upload_file(file_names: List[str], local_paths: List[str]) -> List[str]:
     """
-    Uploads a file to the Google Cloud Vertex AI RAG Corpus.
+    Uploads file(s) to the Google Cloud Vertex AI RAG Corpus.
     If a file with the same display name exists, it is deleted first.
 
     Args:
-        file_name (str): The display name of the file in the corpus.
-        local_path (str): The local path to the file to upload.
+        file_names (List[str]): The display name(s) of the file(s) in the corpus.
+        local_paths (List[str]): The local path(s) to the file(s) to upload.
+
+    Returns:
+        List[str]: A list of resource names (IDs) for the uploaded files.
     """
+    if len(file_names) != len(local_paths):
+        raise ValueError("The number of file names and local paths must be the same.")
+
     try:
         # Initialize Vertex AI
-
         vertexai.init(
             project=PROJECT_ID,
             location=LOCATION,
@@ -67,32 +73,38 @@ def upload_file(file_name: str, local_path: str) -> str:
 
         logger.info(f"CORPUSES: {rag.list_corpora()}")
 
-        logger.info(
-            f"Checking for existing file '{file_name}' in corpus '{CORPUS_NAME}'..."
-        )
-        files = rag.list_files(corpus_name=CORPUS_NAME)
+        # Fetch existing files once to avoid multiple API calls
+        logger.info(f"Listing files in corpus '{CORPUS_NAME}'...")
+        existing_files = {
+            file.display_name: file.name for file in rag.list_files(corpus_name=CORPUS_NAME)
+        }
 
-        # Check if file exists and delete it
-        for file in files:
-            if file.display_name == file_name:
+        uploaded_file_ids = []
+
+        for file_name, local_path in zip(file_names, local_paths):
+            # Check if file exists and delete it
+            if file_name in existing_files:
+                resource_name = existing_files[file_name]
                 logger.info(
-                    f"Found existing file '{file_name}' (Resource Name: {file.name}). Deleting..."
+                    f"Found existing file '{file_name}' (Resource Name: {resource_name}). Deleting..."
                 )
-                rag.delete_file(name=file.name)
+                rag.delete_file(name=resource_name)
                 logger.info(f"Deleted existing file '{file_name}'.")
-                break
 
-        # Upload the new file
-        logger.info(f"Uploading '{local_path}' as '{file_name}'...")
-        rag_file = rag.upload_file(
-            corpus_name=CORPUS_NAME,
-            path=local_path,
-            display_name=file_name,
-            description="Uploaded via RAG Document Loader",
-        )
+            # Upload the new file
+            logger.info(f"Uploading '{local_path}' as '{file_name}'...")
+            rag_file = rag.upload_file(
+                corpus_name=CORPUS_NAME,
+                path=local_path,
+                display_name=file_name,
+                description="Uploaded via RAG Document Loader",
+            )
 
-        logger.info(f"Successfully uploaded file: {rag_file.name}")
-        return rag_file.name if rag_file.name else ""
+            logger.info(f"Successfully uploaded file: {rag_file.name}")
+            if rag_file.name:
+                uploaded_file_ids.append(rag_file.name)
+
+        return uploaded_file_ids
 
     except Exception as e:
         logger.error(f"An error occurred during file upload: {e}")
